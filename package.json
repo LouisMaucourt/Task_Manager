@@ -1,0 +1,27 @@
+{
+  "name": "bun-react-template",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.tsx",
+  "module": "src/index.tsx",
+  "scripts": {
+    "dev": "bun --hot src/index.tsx",
+    "start": "NODE_ENV=production bun src/index.tsx",
+    "build": "bun run build.ts"
+  },
+  "dependencies": {
+    "lucide-react": "^0.475.0",
+    "react": "^19",
+    "react-dom": "^19",
+    "react-router": "^8.3.1",
+    "tailwindcss": "^4.0.6",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.12",
+    "@types/bun": "latest",
+    "@types/react": "^19",
+    "@types/react-dom": "^19"
+  }
+}
