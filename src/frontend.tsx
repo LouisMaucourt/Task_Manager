@@ -1,29 +1,10 @@
-/**
- * This file is the entry point for the React app, it sets up the root
- * element and renders the App component to the DOM.
- *
- * It is included in `src/index.html`.
- */
-import { BrowserRouter, RouterProvider } from "react-router";
-import { createRoot } from "react-dom/client";
-import { StrictMode } from "react";
-import { App } from "./App";
-import { router } from "./router";
+import { RouterProvider } from "react-router";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { router } from "@/router";
 
-const elem = document.getElementById("root")!;
-const app = (
-  <StrictMode>
-      <BrowserRouter>
-        <App />
-    </BrowserRouter>
-  </StrictMode>
+const root = document.getElementById("root");
+
+ReactDOM.createRoot(root).render(
+  <RouterProvider router={router} />,
 );
-
-if (import.meta.hot) {
-  // With hot module reloading, `import.meta.hot.data` is persisted.
-  const root = (import.meta.hot.data.root ??= createRoot(elem));
-  root.render(<RouterProvider router={router} />,);
-} else {
-  // The hot module reloading API is not available in production.
-  createRoot(elem).render(app);
-}

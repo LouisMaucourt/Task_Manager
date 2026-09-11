@@ -1,35 +1,15 @@
-import { serve } from "bun";
+import { Elysia } from "elysia";
 import index from "./index.html";
 
-const server = serve({
+const api = new Elysia({ prefix: "/api" })
+  .get("/test", () => ({ message: "test" }));
+
+Bun.serve({
   routes: {
-    // Serve index.html for all unmatched routes.
+    "/api/*": (req) => api.handle(req),
     "/*": index,
-
-    "/api/hello": {
-      async GET(req) {
-        return Response.json({
-          message: "Hello, world!",
-          method: "GET",
-        });
-      },
-      async PUT(req) {
-        return Response.json({
-          message: "Hello, world!",
-          method: "PUT",
-        });
-      },
-    },
-
-    "/api/hello/:name": async (req) => {
-      const name = req.params.name;
-      return Response.json({
-        message: `Hello, ${name}!`,
-      });
-    },
   },
-
-  development: process.env.NODE_ENV !== "production",
+  development: true,
 });
 
-console.log(`🚀 Server running at ${server.url}`);
+console.log("🚀 Server running at http://localhost:3000");
