@@ -1,5 +1,17 @@
+import { useState } from "react";
+
 export const Account = () => {
-  return (
-    <div className="bg-black">Accouneet</div>
-  )
-}
+	const [form, setForm] = useState({
+		firstname: "",
+		lastname: "",
+		password: "",
+		avatar_url: "",
+		email: "",
+	});
+
+	return (
+		<div className="">
+			<form></form>
+		</div>
+	);
+};

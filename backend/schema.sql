@@ -4,11 +4,12 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE users (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email           TEXT NOT NULL UNIQUE,
-    username        TEXT UNIQUE,
-    password_hash   TEXT NOT NULL,
-    full_name       TEXT,
-    avatar_url      TEXT,
+    email           VARCHAR(255) NOT NULL UNIQUE,
+    firstname       VARCHAR(100) NOT NULL,
+    lastname        VARCHAR(100) NOT NULL,
+    description     TEXT,
+    password_hash   VARCHAR(255) NOT NULL,
+    avatar_url      VARCHAR(500),
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -16,7 +17,7 @@ CREATE TABLE users (
 
 CREATE TABLE workspaces (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name            TEXT NOT NULL,
+    name            VARCHAR(100) NOT NULL,
     slug            TEXT NOT NULL UNIQUE,
     description     TEXT,
     owner_id        UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -39,7 +40,7 @@ CREATE TABLE workspace_members (
 CREATE TABLE workspace_invitations (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workspace_id    UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-    email           TEXT NOT NULL,
+    email           VARCHAR(250) NOT NULL,
     role            workspace_role NOT NULL DEFAULT 'member',
     invited_by      UUID NOT NULL REFERENCES users(id),
     token           TEXT NOT NULL UNIQUE,
@@ -52,11 +53,11 @@ CREATE TABLE workspace_invitations (
 CREATE TABLE projects (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workspace_id    UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-    name            TEXT NOT NULL,
-    key             TEXT NOT NULL, -- ex: "WEB" pour générer des tickets WEB-1, WEB-2...
+    name            VARCHAR(100) NOT NULL,
+    key             VARCHAR(250) NOT NULL,
     description     TEXT,
     is_archived     BOOLEAN NOT NULL DEFAULT false,
-    task_seq        INTEGER NOT NULL DEFAULT 0, -- compteur interne pour numéroter les tâches
+    task_seq        INTEGER NOT NULL DEFAULT 0, 
     created_by      UUID NOT NULL REFERENCES users(id),
     metadata        JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -67,7 +68,7 @@ CREATE TABLE projects (
 CREATE TABLE boards (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id      UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    name            TEXT NOT NULL,
+    name            VARCHAR(100) NOT NULL,
     position        DOUBLE PRECISION NOT NULL DEFAULT 0,
     is_archived     BOOLEAN NOT NULL DEFAULT false,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -78,7 +79,7 @@ CREATE TYPE task_status AS ENUM ('todo', 'in_progress', 'review', 'done');
 CREATE TABLE board_lists (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     board_id        UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
-    name            TEXT NOT NULL,
+    name            VARCHAR(100) NOT NULL,
     position        DOUBLE PRECISION NOT NULL,
     status          task_status NOT NULL DEFAULT 'todo',
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -90,7 +91,7 @@ CREATE TABLE tasks (
     project_id      UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     list_id         UUID NOT NULL REFERENCES board_lists(id) ON DELETE CASCADE,
     number          INTEGER NOT NULL, 
-    title           TEXT NOT NULL,
+    title           VARCHAR(100) NOT NULL,
     description     TEXT,
     position        DOUBLE PRECISION NOT NULL,
     priority        task_priority NOT NULL DEFAULT 'medium',
@@ -142,7 +143,7 @@ CREATE TABLE task_dependencies (
 CREATE TABLE labels (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id      UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    name            TEXT NOT NULL,
+    name            VARCHAR(100) NOT NULL,
     color           TEXT NOT NULL DEFAULT '#999999',
     UNIQUE (project_id, name)
 );
@@ -157,7 +158,7 @@ CREATE TABLE task_labels (
 CREATE TABLE checklists (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     task_id         UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
-    title           TEXT NOT NULL DEFAULT 'Checklist',
+    title           VARCHAR(100) NOT NULL DEFAULT 'Checklist',
     position        DOUBLE PRECISION NOT NULL DEFAULT 0
 );
 
@@ -184,9 +185,9 @@ CREATE TABLE attachments (
     task_id         UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
     uploaded_by     UUID NOT NULL REFERENCES users(id),
     file_url        TEXT NOT NULL,
-    file_name       TEXT NOT NULL,
+    file_name       VARCHAR(100) NOT NULL,
     file_size       BIGINT,
-    mime_type       TEXT,
+    mime_type       VARCHAR(100) NOT NULL,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -236,11 +237,11 @@ CREATE TRIGGER trg_touch_comments   BEFORE UPDATE ON comments   FOR EACH ROW EXE
 
 CREATE TABLE block_types (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    key             TEXT NOT NULL UNIQUE, -- identifiant unique du type de bloc
-    name            TEXT NOT NULL,
+    key             TEXT NOT NULL UNIQUE, 
+    name            VARCHAR(100) NOT NULL,
     description     TEXT,
-    icon            TEXT,
-    config_schema   JSONB NOT NULL DEFAULT '{}'::jsonb, -- schéma de config attendu
+    icon            VARCHAR(250),
+    config_schema   JSONB NOT NULL DEFAULT '{}'::jsonb, 
     is_active       BOOLEAN NOT NULL DEFAULT true,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -263,7 +264,7 @@ CREATE TABLE section_blocks (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     section_id      UUID NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
     block_type_id   UUID NOT NULL REFERENCES block_types(id) ON DELETE RESTRICT,
-    title           TEXT, 
+    title           VARCHAR(100) NOT NULL, 
     config          JSONB NOT NULL DEFAULT '{}'::jsonb,
     pos_x           INTEGER NOT NULL DEFAULT 0, 
     pos_y           INTEGER NOT NULL DEFAULT 0,
