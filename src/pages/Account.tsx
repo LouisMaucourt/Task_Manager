@@ -1,161 +1,200 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Card, CardTitle } from "@/components/ui/card";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { InputPwd } from "@/components/ui/InputPwd";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getUsers, signIn, signUp } from "@/modules/users/api";
 
-type Status = "typing" | "submitting" | "success";
-
-type User = {
-	id: string;
-	firstname: string;
-	lastname: string;
-	email: string;
-};
-
-const initialForm = {
+const initialSignUp = {
 	firstname: "",
 	lastname: "",
+	email: "",
 	password: "",
 	confirm_password: "",
 	avatar_url: "",
+};
+
+const initialSignIn = {
 	email: "",
+	password: "",
 };
 
 export const Account = () => {
-	const [form, setForm] = useState(initialForm);
-	const [status, setStatus] = useState<Status>("typing");
-	const [error, setError] = useState<string | null>(null);
-	const [users, setUsers] = useState<User[]>([]);
+	const queryClient = useQueryClient();
+	const [signUpForm, setSignUpForm] = useState(initialSignUp);
+	const [signInForm, setSignInForm] = useState(initialSignIn);
+	const [formError, setFormError] = useState<string | null>(null);
 
-	useEffect(() => {
-		fetch("/api/users")
-			.then((res) => res.json())
-			.then((data) => {
-				console.log(data);
-				setUsers(data);
-			});
-	}, []);
+	const query = useQuery({ queryKey: ["users"], queryFn: getUsers });
 
-	function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+	const signUpMutation = useMutation({
+		mutationFn: signUp,
+		onSuccess: () => {
+			setSignUpForm(initialSignUp);
+			queryClient.invalidateQueries({ queryKey: ["users"] });
+		},
+	});
+
+	const signInMutation = useMutation({
+		mutationFn: signIn,
+		onSuccess: () => {
+			setSignInForm(initialSignIn);
+		},
+	});
+
+	function handleSignUpChange(e: React.ChangeEvent<HTMLInputElement>) {
 		const { name, value } = e.target;
-		setForm((prev) => ({ ...prev, [name]: value }));
+		setSignUpForm((prev) => ({ ...prev, [name]: value }));
 	}
 
-	async function handleSubmit(e: React.FormEvent) {
-		e.preventDefault();
+	function handleSignInChange(e: React.ChangeEvent<HTMLInputElement>) {
+		const { name, value } = e.target;
+		setSignInForm((prev) => ({ ...prev, [name]: value }));
+	}
 
-		if (form.password !== form.confirm_password) {
-			setError("Mot de passe différent");
+	function handleSignUp(e: React.FormEvent) {
+		e.preventDefault();
+		setFormError(null);
+
+		if (signUpForm.password !== signUpForm.confirm_password) {
+			setFormError("Les mots de passe ne correspondent pas");
 			return;
 		}
 
-		setError(null);
-		setStatus("submitting");
-
-		try {
-			const res = await fetch("/api/users", {
-				method: "POST",
-				body: JSON.stringify(form),
-				headers: { "Content-Type": "application/json" },
-			});
-
-			if (!res.ok) {
-				const message = await res.text();
-				throw new Error(message || "Échec de la création du compte");
-			}
-
-			setStatus("success");
-		} catch (err) {
-			setStatus("typing");
-			setError(err instanceof Error ? err.message : "Une erreur est survenue");
-		}
+		const { confirm_password, ...payload } = signUpForm;
+		signUpMutation.mutate(payload);
 	}
-	if (status === "success") {
-		return (
-			<Card className="p-10">
-				<h1>Compte créé avec succès !</h1>
-			</Card>
-		);
+
+	function handleSignIn(e: React.FormEvent) {
+		e.preventDefault();
+		signInMutation.mutate(signInForm);
 	}
 
 	return (
 		<>
-			<Card className="p-10">
-				<form onSubmit={handleSubmit} className="flex flex-col gap-4">
-					<Field>
-						<FieldLabel>Prénom</FieldLabel>
-						<Input
-							name="firstname"
-							value={form.firstname}
-							onChange={handleChange}
-							disabled={status === "submitting"}
-							required
-						/>
-					</Field>
+			<Tabs defaultValue="signin" className="w-[800px]">
+				<TabsList>
+					<TabsTrigger value="signin">Connexion</TabsTrigger>
+					<TabsTrigger value="signup">Inscription</TabsTrigger>
+				</TabsList>
 
-					<Field>
-						<FieldLabel>Nom</FieldLabel>
-						<Input
-							name="lastname"
-							value={form.lastname}
-							onChange={handleChange}
-							disabled={status === "submitting"}
-							required
-						/>
-					</Field>
+				<TabsContent value="signin">
+					<Card className="p-10">
+						<CardTitle>Connexion</CardTitle>
+						<form onSubmit={handleSignIn} className="flex flex-col gap-4">
+							<Field>
+								<FieldLabel>Email</FieldLabel>
+								<Input
+									name="email"
+									type="email"
+									value={signInForm.email}
+									onChange={handleSignInChange}
+									disabled={signInMutation.isPending}
+									required
+								/>
+							</Field>
+							<Field>
+								<InputPwd
+									name="password"
+									value={signInForm.password}
+									onChange={handleSignInChange}
+									disabled={signInMutation.isPending}
+									required
+								/>
+							</Field>
 
-					<Field>
-						<FieldLabel>Email</FieldLabel>
-						<Input
-							name="email"
-							type="email"
-							value={form.email}
-							onChange={handleChange}
-							disabled={status === "submitting"}
-							required
-						/>
-					</Field>
+							<Button type="submit" disabled={signInMutation.isPending}>
+								{signInMutation.isPending ? "Connexion..." : "Se connecter"}
+							</Button>
 
-					<Field>
-						<FieldLabel>Mot de passe</FieldLabel>
-						<InputPwd
-							name="password"
-							value={form.password}
-							onChange={handleChange}
-							disabled={status === "submitting"}
-							required
-						/>
-					</Field>
+							{signInMutation.isError && (
+								<p className="text-red-400">{signInMutation.error.message}</p>
+							)}
+						</form>
+					</Card>
+				</TabsContent>
 
-					<Field>
-						<FieldLabel>Confirmer mot de passe</FieldLabel>
-						<InputPwd
-							name="confirm_password"
-							value={form.confirm_password}
-							onChange={handleChange}
-							disabled={status === "submitting"}
-							required
-						/>
-						{error && (
-							<FieldDescription className="text-red-400">
-								{error}
-							</FieldDescription>
-						)}
-					</Field>
+				<TabsContent value="signup">
+					<Card className="p-10">
+						<CardTitle>Inscription</CardTitle>
+						<form onSubmit={handleSignUp} className="flex flex-col gap-4">
+							<Field>
+								<FieldLabel>Prénom</FieldLabel>
+								<Input
+									name="firstname"
+									value={signUpForm.firstname}
+									onChange={handleSignUpChange}
+									disabled={signUpMutation.isPending}
+									required
+								/>
+							</Field>
+							<Field>
+								<FieldLabel>Nom</FieldLabel>
+								<Input
+									name="lastname"
+									value={signUpForm.lastname}
+									onChange={handleSignUpChange}
+									disabled={signUpMutation.isPending}
+									required
+								/>
+							</Field>
+							<Field>
+								<FieldLabel>Email</FieldLabel>
+								<Input
+									name="email"
+									type="email"
+									value={signUpForm.email}
+									onChange={handleSignUpChange}
+									disabled={signUpMutation.isPending}
+									required
+								/>
+							</Field>
+							<Field>
+								<InputPwd
+									name="password"
+									value={signUpForm.password}
+									onChange={handleSignUpChange}
+									disabled={signUpMutation.isPending}
+									required
+								/>
+							</Field>
+							<Field>
+								<FieldLabel>Confirmer mot de passe</FieldLabel>
+								<InputPwd
+									name="confirm_password"
+									value={signUpForm.confirm_password}
+									onChange={handleSignUpChange}
+									disabled={signUpMutation.isPending}
+									required
+								/>
+							</Field>
 
-					<Button disabled={status === "submitting"}>
-						{status === "submitting" ? "Envoi..." : "Confirmer"}
-					</Button>
-				</form>
-			</Card>
+							<Button type="submit" disabled={signUpMutation.isPending}>
+								{signUpMutation.isPending ? "Envoi..." : "Confirmer"}
+							</Button>
+
+							{formError && <p className="text-red-400">{formError}</p>}
+							{signUpMutation.isError && (
+								<p className="text-red-400">{signUpMutation.error.message}</p>
+							)}
+							{signUpMutation.isSuccess && <p>Compte créé avec succès !</p>}
+						</form>
+					</Card>
+				</TabsContent>
+			</Tabs>
 
 			<Card className="p-10 mt-4">
 				<h2>Utilisateurs</h2>
+				{query.isPending && <p>Chargement...</p>}
+				{query.isError && (
+					<p className="text-red-400">Erreur : {query.error.message}</p>
+				)}
 				<ul>
-					{users.map((user) => (
+					{query.data?.map((user) => (
 						<li key={user.id}>
 							{user.firstname} {user.lastname} — {user.email}
 						</li>

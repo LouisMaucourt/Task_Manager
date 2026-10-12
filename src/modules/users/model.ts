@@ -18,7 +18,7 @@ export const UserModel = {
 		firstname: t.String(),
 		lastname: t.String(),
 		email: t.String(),
-		avatar_url: t.Optional(t.String()),
+		avatar_url: t.Optional(t.Union([t.String(), t.Null()])),
 	}),
 } as const;
 

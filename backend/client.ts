@@ -1,11 +1,5 @@
-import postgres from "postgres";
+import { Pool } from "pg";
 
-declare global {
-	var __sql: ReturnType<typeof postgres> | undefined;
-}
-
-export const sql =
-	globalThis.__sql ??
-	(globalThis.__sql = postgres(process.env.DATABASE_URL!, {
-		max: 10,
-	}));
+export const pool = new Pool({
+	connectionString: process.env.DATABASE_URL,
+});

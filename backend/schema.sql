@@ -1,18 +1,20 @@
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-CREATE EXTENSION IF NOT EXISTS "pgcrypto"; 
+-- Nettoyage (la table "user" de better-auth n'est jamais touchée)
+DROP TABLE IF EXISTS
+    section_blocks, sections, block_types,
+    activity_log, attachments, comments,
+    checklist_items, checklists,
+    task_labels, labels,
+    task_dependencies, task_assignees, tasks,
+    board_lists, boards,
+    projects,
+    workspace_invitations, workspace_members, workspaces
+CASCADE;
 
-
-CREATE TABLE users (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email           VARCHAR(255) NOT NULL UNIQUE,
-    firstname       VARCHAR(100) NOT NULL,
-    lastname        VARCHAR(100) NOT NULL,
-    description     TEXT,
-    password_hash   VARCHAR(255) NOT NULL,
-    avatar_url      VARCHAR(500),
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+DROP TYPE IF EXISTS workspace_role, task_status, task_priority, dependency_type CASCADE;
+DROP FUNCTION IF EXISTS set_task_number() CASCADE;
+DROP FUNCTION IF EXISTS touch_updated_at() CASCADE;
 
 
 CREATE TABLE workspaces (
@@ -20,7 +22,7 @@ CREATE TABLE workspaces (
     name            VARCHAR(100) NOT NULL,
     slug            TEXT NOT NULL UNIQUE,
     description     TEXT,
-    owner_id        UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    owner_id        TEXT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
     metadata        JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -31,7 +33,7 @@ CREATE TYPE workspace_role AS ENUM ('owner', 'admin', 'member', 'viewer');
 CREATE TABLE workspace_members (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workspace_id    UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-    user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id         TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
     role            workspace_role NOT NULL DEFAULT 'member',
     joined_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE (workspace_id, user_id)
@@ -42,13 +44,12 @@ CREATE TABLE workspace_invitations (
     workspace_id    UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
     email           VARCHAR(250) NOT NULL,
     role            workspace_role NOT NULL DEFAULT 'member',
-    invited_by      UUID NOT NULL REFERENCES users(id),
+    invited_by      TEXT NOT NULL REFERENCES "user"(id),
     token           TEXT NOT NULL UNIQUE,
     accepted_at     TIMESTAMPTZ,
     expires_at      TIMESTAMPTZ NOT NULL,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-
 
 CREATE TABLE projects (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -57,8 +58,8 @@ CREATE TABLE projects (
     key             VARCHAR(250) NOT NULL,
     description     TEXT,
     is_archived     BOOLEAN NOT NULL DEFAULT false,
-    task_seq        INTEGER NOT NULL DEFAULT 0, 
-    created_by      UUID NOT NULL REFERENCES users(id),
+    task_seq        INTEGER NOT NULL DEFAULT 0,
+    created_by      TEXT NOT NULL REFERENCES "user"(id),
     metadata        JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -76,6 +77,7 @@ CREATE TABLE boards (
 );
 
 CREATE TYPE task_status AS ENUM ('todo', 'in_progress', 'review', 'done');
+
 CREATE TABLE board_lists (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     board_id        UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
@@ -86,11 +88,12 @@ CREATE TABLE board_lists (
 );
 
 CREATE TYPE task_priority AS ENUM ('low', 'medium', 'high', 'urgent');
+
 CREATE TABLE tasks (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id      UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     list_id         UUID NOT NULL REFERENCES board_lists(id) ON DELETE CASCADE,
-    number          INTEGER NOT NULL, 
+    number          INTEGER NOT NULL,
     title           VARCHAR(100) NOT NULL,
     description     TEXT,
     position        DOUBLE PRECISION NOT NULL,
@@ -98,8 +101,8 @@ CREATE TABLE tasks (
     due_date        TIMESTAMPTZ,
     is_completed    BOOLEAN NOT NULL DEFAULT false,
     completed_at    TIMESTAMPTZ,
-    created_by      UUID NOT NULL REFERENCES users(id),
-    metadata        JSONB NOT NULL DEFAULT '{}'::jsonb, 
+    created_by      TEXT NOT NULL REFERENCES "user"(id),
+    metadata        JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE (project_id, number)
@@ -122,7 +125,7 @@ EXECUTE FUNCTION set_task_number();
 
 CREATE TABLE task_assignees (
     task_id         UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
-    user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id         TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
     assigned_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (task_id, user_id)
 );
@@ -138,8 +141,6 @@ CREATE TABLE task_dependencies (
     UNIQUE (task_id, depends_on_task_id, type)
 );
 
-
-
 CREATE TABLE labels (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id      UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -153,7 +154,6 @@ CREATE TABLE task_labels (
     label_id        UUID NOT NULL REFERENCES labels(id) ON DELETE CASCADE,
     PRIMARY KEY (task_id, label_id)
 );
-
 
 CREATE TABLE checklists (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -170,11 +170,10 @@ CREATE TABLE checklist_items (
     position        DOUBLE PRECISION NOT NULL DEFAULT 0
 );
 
-
 CREATE TABLE comments (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     task_id         UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
-    user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id         TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
     content         TEXT NOT NULL,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -183,7 +182,7 @@ CREATE TABLE comments (
 CREATE TABLE attachments (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     task_id         UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
-    uploaded_by     UUID NOT NULL REFERENCES users(id),
+    uploaded_by     TEXT NOT NULL REFERENCES "user"(id),
     file_url        TEXT NOT NULL,
     file_name       VARCHAR(100) NOT NULL,
     file_size       BIGINT,
@@ -191,19 +190,16 @@ CREATE TABLE attachments (
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-
 CREATE TABLE activity_log (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workspace_id    UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
     project_id      UUID REFERENCES projects(id) ON DELETE CASCADE,
     task_id         UUID REFERENCES tasks(id) ON DELETE CASCADE,
-    user_id         UUID REFERENCES users(id) ON DELETE SET NULL,
-    action_type     TEXT NOT NULL, 
-    details         JSONB NOT NULL DEFAULT '{}'::jsonb, 
+    user_id         TEXT REFERENCES "user"(id) ON DELETE SET NULL,
+    action_type     TEXT NOT NULL,
+    details         JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-
-
 
 CREATE INDEX idx_workspace_members_user      ON workspace_members(user_id);
 CREATE INDEX idx_workspace_members_workspace ON workspace_members(workspace_id);
@@ -218,7 +214,6 @@ CREATE INDEX idx_comments_task               ON comments(task_id);
 CREATE INDEX idx_activity_log_workspace      ON activity_log(workspace_id, created_at DESC);
 CREATE INDEX idx_activity_log_project        ON activity_log(project_id, created_at DESC);
 
-
 CREATE OR REPLACE FUNCTION touch_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -227,21 +222,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_touch_users      BEFORE UPDATE ON users      FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
 CREATE TRIGGER trg_touch_workspaces BEFORE UPDATE ON workspaces FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
 CREATE TRIGGER trg_touch_projects   BEFORE UPDATE ON projects   FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
 CREATE TRIGGER trg_touch_boards     BEFORE UPDATE ON boards     FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
 CREATE TRIGGER trg_touch_tasks      BEFORE UPDATE ON tasks      FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
 CREATE TRIGGER trg_touch_comments   BEFORE UPDATE ON comments   FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
 
-
 CREATE TABLE block_types (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    key             TEXT NOT NULL UNIQUE, 
+    key             TEXT NOT NULL UNIQUE,
     name            VARCHAR(100) NOT NULL,
     description     TEXT,
     icon            VARCHAR(250),
-    config_schema   JSONB NOT NULL DEFAULT '{}'::jsonb, 
+    config_schema   JSONB NOT NULL DEFAULT '{}'::jsonb,
     is_active       BOOLEAN NOT NULL DEFAULT true,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -249,12 +242,12 @@ CREATE TABLE block_types (
 CREATE TABLE sections (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workspace_id    UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-    project_id      UUID REFERENCES projects(id) ON DELETE CASCADE, 
+    project_id      UUID REFERENCES projects(id) ON DELETE CASCADE,
     name            TEXT NOT NULL,
     slug            TEXT NOT NULL,
     icon            TEXT,
     position        DOUBLE PRECISION NOT NULL DEFAULT 0,
-    created_by      UUID NOT NULL REFERENCES users(id),
+    created_by      TEXT NOT NULL REFERENCES "user"(id),
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE (workspace_id, slug)
@@ -264,9 +257,9 @@ CREATE TABLE section_blocks (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     section_id      UUID NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
     block_type_id   UUID NOT NULL REFERENCES block_types(id) ON DELETE RESTRICT,
-    title           VARCHAR(100) NOT NULL, 
+    title           VARCHAR(100) NOT NULL,
     config          JSONB NOT NULL DEFAULT '{}'::jsonb,
-    pos_x           INTEGER NOT NULL DEFAULT 0, 
+    pos_x           INTEGER NOT NULL DEFAULT 0,
     pos_y           INTEGER NOT NULL DEFAULT 0,
     width           INTEGER NOT NULL DEFAULT 4,
     height          INTEGER NOT NULL DEFAULT 3,
@@ -274,8 +267,8 @@ CREATE TABLE section_blocks (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_sections_workspace       ON sections(workspace_id);
-CREATE INDEX idx_section_blocks_section   ON section_blocks(section_id);
+CREATE INDEX idx_sections_workspace     ON sections(workspace_id);
+CREATE INDEX idx_section_blocks_section ON section_blocks(section_id);
 
 CREATE TRIGGER trg_touch_sections       BEFORE UPDATE ON sections       FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
 CREATE TRIGGER trg_touch_section_blocks BEFORE UPDATE ON section_blocks FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
