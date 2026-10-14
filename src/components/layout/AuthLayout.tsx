@@ -1,9 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
 import {
-	BellIcon,
 	CheckIcon,
 	ChevronsUpDownIcon,
 	FolderIcon,
-	InboxIcon,
 	LayoutDashboardIcon,
 	LogOutIcon,
 	PlusIcon,
@@ -39,6 +38,7 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
+import { getWorkspaces } from "@/modules/workspaces/api";
 
 const workspaces = [
 	{ id: "1", name: "Acme Inc" },
@@ -53,7 +53,22 @@ const navigation = [
 
 function WorkspaceSwitcher() {
 	const { isMobile } = useSidebar();
-	const [active, setActive] = useState(workspaces[0]);
+	const query = useQuery({ queryKey: ["workspaces"], queryFn: getWorkspaces });
+	const workspaces = query.data ?? [];
+	const [activeId, setActiveId] = useState<string | null>(null);
+	const active = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
+
+	if (query.isPending) {
+		return (
+			<SidebarMenu>
+				<SidebarMenuItem>
+					<SidebarMenuButton size="lg" disabled>
+						Chargement...
+					</SidebarMenuButton>
+				</SidebarMenuItem>
+			</SidebarMenu>
+		);
+	}
 
 	return (
 		<SidebarMenu>
@@ -65,10 +80,12 @@ function WorkspaceSwitcher() {
 							className="data-[state=open]:bg-sidebar-accent"
 						>
 							<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-semibold">
-								{active.name[0]}
+								{active?.name[0] ?? "?"}
 							</div>
 							<div className="grid flex-1 text-left text-sm leading-tight">
-								<span className="truncate font-medium">{active.name}</span>
+								<span className="truncate font-medium">
+									{active?.name ?? "Aucun workspace"}
+								</span>
 								<span className="truncate text-xs text-muted-foreground">
 									Workspace
 								</span>
@@ -86,12 +103,14 @@ function WorkspaceSwitcher() {
 							Workspaces
 						</DropdownMenuLabel>
 						{workspaces.map((w) => (
-							<DropdownMenuItem key={w.id} onClick={() => setActive(w)}>
+							<DropdownMenuItem key={w.id} onClick={() => setActiveId(w.id)}>
 								<div className="flex size-6 items-center justify-center rounded-md border text-xs">
 									{w.name[0]}
 								</div>
 								{w.name}
-								{w.id === active.id && <CheckIcon className="ml-auto size-4" />}
+								{w.id === active?.id && (
+									<CheckIcon className="ml-auto size-4" />
+								)}
 							</DropdownMenuItem>
 						))}
 						<DropdownMenuSeparator />

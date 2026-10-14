@@ -1,6 +1,4 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
--- Nettoyage (la table "user" de better-auth n'est jamais touchée)
 DROP TABLE IF EXISTS
     section_blocks, sections, block_types,
     activity_log, attachments, comments,

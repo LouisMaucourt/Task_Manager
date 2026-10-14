@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Outlet } from "react-router";
+import { Toaster } from "../ui/sonner";
 
 export const Root = () => {
 	const queryClient = new QueryClient();
@@ -7,6 +8,7 @@ export const Root = () => {
 	return (
 		<QueryClientProvider client={queryClient}>
 			<Outlet />
+			<Toaster />
 		</QueryClientProvider>
 	);
 };
