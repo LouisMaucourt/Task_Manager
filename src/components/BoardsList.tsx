@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type React from "react";
 import { useState } from "react";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import { createBoardList, getBoardsList } from "@/modules/boardsList/api";
+import type { BoardList } from "@/modules/boardsList/model";
 import { Card } from "./ui/card";
 
 const initialData = {
@@ -10,6 +11,9 @@ const initialData = {
 };
 
 export const BoardsList = () => {
+	const { state } = useLocation() as { state: { board?: BoardList } | null };
+	const board = state?.board;
+	console.log(board);
 	const { id } = useParams();
 	const [form, setForm] = useState(initialData);
 	const queryClient = useQueryClient();
@@ -35,8 +39,9 @@ export const BoardsList = () => {
 	};
 
 	return (
-		<div>
-			<Card>
+		<Card className="p-5">
+			BoardList - {board.name}
+			<Card className="p-3">
 				<form onSubmit={handleSubmit}>
 					<input
 						placeholder="Name"
@@ -52,10 +57,8 @@ export const BoardsList = () => {
 					)}
 				</form>
 			</Card>
-
 			{query.isError && <p>{query.error.message}</p>}
 			{query.isPending && <p>Loading...</p>}
-
 			{query.data && (
 				<ul>
 					{query.data.map((list) => (
@@ -63,6 +66,6 @@ export const BoardsList = () => {
 					))}
 				</ul>
 			)}
-		</div>
+		</Card>
 	);
 };

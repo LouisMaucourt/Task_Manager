@@ -59,7 +59,9 @@ export const ProjectItem = ({ project }: { project: Project }) => {
 	return (
 		<li className="flex items-center gap-2">
 			{project.name} — {project.description} -{" "}
-			<Link to={`/dashboard/projects/${project.id}`}>voir plus</Link>
+			<Link state={{ project }} to={`/dashboard/projects/${project.id}`}>
+				voir plus
+			</Link>
 			<Dialog
 				open={editOpen}
 				onOpenChange={(open) => {

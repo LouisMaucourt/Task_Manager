@@ -1,10 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import { createBoard, getBoards } from "@/modules/boards/api";
+import type { Board } from "@/modules/boards/model";
+import type { Project } from "@/modules/projects/model";
 import { BoardItem } from "./items/BoardItem";
 
 export const Boards = () => {
+	const { state } = useLocation() as { state: { project?: Project } | null };
+	const project = state?.project;
+	console.log(project);
 	const { id: projectId } = useParams<{ id: string }>();
 	const queryClient = useQueryClient();
 	const [name, setName] = useState("");
@@ -32,7 +37,7 @@ export const Boards = () => {
 
 	return (
 		<div>
-			<h2>Boards</h2>
+			<h2>Boards {project?.name}</h2>
 
 			<form onSubmit={handleSubmit} className="flex flex-col gap-2 mb-6">
 				<input

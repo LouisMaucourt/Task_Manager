@@ -54,7 +54,7 @@ export const BoardItem = ({ board }: { board: Board }) => {
 
 	return (
 		<li className="flex items-center gap-2">
-			<Link to={`boards/${board.id}`}>
+			<Link state={{ board }} to={`boards/${board.id}`}>
 				{board.name} - {board.position + 1}
 			</Link>
 			<Dialog
