@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	CheckIcon,
 	ChevronsUpDownIcon,
@@ -8,8 +8,9 @@ import {
 	PlusIcon,
 	SettingsIcon,
 	UserIcon,
+	Users2Icon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Outlet } from "react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -39,31 +40,46 @@ import {
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 import { getWorkspaces } from "@/modules/workspaces/api";
-
-const workspaces = [
-	{ id: "1", name: "Acme Inc" },
-	{ id: "2", name: "Perso" },
-	{ id: "3", name: "Équipe design" },
-];
+import { getCookie, setCookie } from "@/utilis/cookies";
 
 const navigation = [
 	{ title: "Dashboard", icon: LayoutDashboardIcon, url: "/dashboard" },
-	{ title: "Projets", icon: FolderIcon, url: "/dashboard/project" },
+	{ title: "Projects", icon: FolderIcon, url: "/dashboard/projects" },
+	{ title: "Members", icon: Users2Icon, url: "/dashboard/members" },
 ];
 
 function WorkspaceSwitcher() {
 	const { isMobile } = useSidebar();
-	const query = useQuery({ queryKey: ["workspaces"], queryFn: getWorkspaces });
+	const queryClient = useQueryClient();
+	const query = useQuery({
+		queryKey: ["workspaces"],
+		queryFn: getWorkspaces,
+		retry: false,
+	});
 	const workspaces = query.data ?? [];
-	const [activeId, setActiveId] = useState<string | null>(null);
+	const [activeId, setActiveId] = useState<string | null>(() =>
+		getCookie("workspaceId"),
+	);
 	const active = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
+	useEffect(() => {
+		if (active && getCookie("workspaceId") !== active.id) {
+			setCookie("workspaceId", active.id);
+			setActiveId(active.id);
+			queryClient.invalidateQueries({ queryKey: ["projects"] });
+		}
+	}, [active, queryClient]);
 
+	const switchWorkspace = (id: string) => {
+		setCookie("workspaceId", id);
+		setActiveId(id);
+		queryClient.invalidateQueries({ queryKey: ["projects"] });
+	};
 	if (query.isPending) {
 		return (
 			<SidebarMenu>
 				<SidebarMenuItem>
 					<SidebarMenuButton size="lg" disabled>
-						Chargement...
+						Loading...
 					</SidebarMenuButton>
 				</SidebarMenuItem>
 			</SidebarMenu>
@@ -103,7 +119,10 @@ function WorkspaceSwitcher() {
 							Workspaces
 						</DropdownMenuLabel>
 						{workspaces.map((w) => (
-							<DropdownMenuItem key={w.id} onClick={() => setActiveId(w.id)}>
+							<DropdownMenuItem
+								key={w.id}
+								onClick={() => switchWorkspace(w.id)}
+							>
 								<div className="flex size-6 items-center justify-center rounded-md border text-xs">
 									{w.name[0]}
 								</div>
@@ -116,7 +135,7 @@ function WorkspaceSwitcher() {
 						<DropdownMenuSeparator />
 						<DropdownMenuItem>
 							<PlusIcon className="size-4" />
-							Créer un workspace
+							Create a workspace
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
@@ -148,7 +167,6 @@ function UserMenu() {
 			},
 		});
 	}
-
 	return (
 		<SidebarMenu>
 			<SidebarMenuItem>
@@ -190,16 +208,16 @@ function UserMenu() {
 						<DropdownMenuSeparator />
 						<DropdownMenuItem>
 							<UserIcon className="size-4" />
-							Mon compte
+							Acompte
 						</DropdownMenuItem>
 						<DropdownMenuItem>
 							<SettingsIcon className="size-4" />
-							Paramètres
+							Settings
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem onClick={handleSignOut}>
 							<LogOutIcon className="size-4" />
-							Se déconnecter
+							Disconnect
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>

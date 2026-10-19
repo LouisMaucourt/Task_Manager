@@ -2,6 +2,9 @@ import { Elysia } from "elysia";
 
 import index from "./index.html";
 import { auth } from "./lib/auth";
+import { boards } from "./modules/boards";
+import { boardsList } from "./modules/boardsList";
+import { project } from "./modules/projects";
 import { users } from "./modules/users";
 import { workspaces } from "./modules/workspaces";
 
@@ -16,7 +19,10 @@ const api = new Elysia({ prefix: "/api" })
 	})
 	.get("/test", () => ({ message: "test" }))
 	.use(users)
-	.use(workspaces);
+	.use(workspaces)
+	.use(project)
+	.use(boards)
+	.use(boardsList);
 
 Bun.serve({
 	routes: {

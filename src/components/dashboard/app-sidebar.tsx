@@ -27,7 +27,8 @@ import {
 
 const navigation = [
 	{ title: "Dashboard", icon: LayoutDashboardIcon, url: "/dashboard" },
-	{ title: "Projets", icon: FolderIcon, url: "/dashboard/project" },
+	{ title: "Projects", icon: FolderIcon, url: "/dashboard/projects" },
+	{ title: "Members", icon: FolderIcon, url: "/dashboard/members" },
 ];
 
 export default function SidebarDemo() {
