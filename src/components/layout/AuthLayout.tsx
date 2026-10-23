@@ -41,6 +41,7 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { getWorkspaces } from "@/modules/workspaces/api";
 import { getCookie, setCookie } from "@/utilis/cookies";
+import { CreateWorkspaceDialog } from "../form/Workspace";
 
 const navigation = [
 	{ title: "Dashboard", icon: LayoutDashboardIcon, url: "/dashboard" },
@@ -60,6 +61,7 @@ function WorkspaceSwitcher() {
 	const [activeId, setActiveId] = useState<string | null>(() =>
 		getCookie("workspaceId"),
 	);
+	const [createOpen, setCreateOpen] = useState(false);
 	const active = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
 	useEffect(() => {
 		if (active && getCookie("workspaceId") !== active.id) {
@@ -133,13 +135,14 @@ function WorkspaceSwitcher() {
 							</DropdownMenuItem>
 						))}
 						<DropdownMenuSeparator />
-						<DropdownMenuItem>
+						<DropdownMenuItem onSelect={() => setCreateOpen(true)}>
 							<PlusIcon className="size-4" />
 							Create a workspace
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</SidebarMenuItem>
+			<CreateWorkspaceDialog open={createOpen} onOpenChange={setCreateOpen} />
 		</SidebarMenu>
 	);
 }
