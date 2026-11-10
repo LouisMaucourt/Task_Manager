@@ -8,6 +8,8 @@ import { project } from "./modules/projects";
 import { tasks } from "./modules/tasks";
 import { users } from "./modules/users";
 import { workspaces } from "./modules/workspaces";
+import { workspacesInvitation } from "./modules/workspaces_invitations";
+import { workspacesMembers } from "./modules/workspaces_members";
 
 const BETTER_AUTH_ACCEPT_METHODS = ["POST", "GET"];
 
@@ -21,6 +23,8 @@ const api = new Elysia({ prefix: "/api" })
 	.get("/test", () => ({ message: "test" }))
 	.use(users)
 	.use(workspaces)
+	.use(workspacesMembers)
+	.use(workspacesInvitation)
 	.use(project)
 	.use(boards)
 	.use(boardsList)

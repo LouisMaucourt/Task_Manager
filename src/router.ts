@@ -3,6 +3,7 @@ import { Boards } from "./components/Boards";
 import { BoardsList } from "./components/BoardsList";
 import { Dashboard } from "./components/Dashboard";
 import { Home } from "./components/Home";
+import { Invitation } from "./components/Invitation";
 import { AuthLayout } from "./components/layout/AuthLayout";
 import { Root } from "./components/layout/Root";
 import { Members } from "./components/Members";
@@ -17,6 +18,7 @@ export const router = createBrowserRouter([
 		children: [
 			{ index: true, Component: Home },
 			{ path: "account", Component: Account },
+			{ path: "invitation/:token", Component: Invitation },
 			{
 				path: "dashboard",
 				Component: AuthLayout,

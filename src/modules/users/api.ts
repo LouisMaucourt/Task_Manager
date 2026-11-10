@@ -17,7 +17,7 @@ export type SignInPayload = {
 
 export async function getUsers(): Promise<UserModel["publicUser"][]> {
 	const res = await fetch("/api/users");
-	if (!res.ok) throw new Error("Impossible de charger les utilisateurs");
+	if (!res.ok) throw new Error("Failed to get users");
 	return res.json();
 }
 
@@ -30,8 +30,7 @@ export async function signUp(payload: SignUpPayload) {
 		lastname: payload.lastname,
 		image: payload.avatar_url || undefined,
 	});
-
-	if (error) throw new Error(error.message || "Échec de la création du compte");
+	if (error) throw new Error(error.message || "Failed to create account");
 	return data;
 }
 
@@ -43,6 +42,6 @@ export async function signIn(payload: SignInPayload) {
 		callbackURL: "/dashboard",
 	});
 
-	if (error) throw new Error(error.message || "Échec de la connexion");
+	if (error) throw new Error(error.message || "Failed to sign in");
 	return data;
 }

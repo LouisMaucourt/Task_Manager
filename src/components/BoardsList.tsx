@@ -68,7 +68,7 @@ export const BoardsList = () => {
 						required
 					/>
 					<button type="submit" disabled={createMutation.isPending}>
-						{createMutation.isPending ? "Creation..." : "Créer"}
+						{createMutation.isPending ? "Creating..." : "Create"}
 					</button>
 					{createMutation.isError && (
 						<p className="text-red-400">{createMutation.error.message}</p>

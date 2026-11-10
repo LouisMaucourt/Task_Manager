@@ -50,14 +50,14 @@ export const TaskItem = ({ listId, boardId, tasks, lists }: Props) => {
 
 			<form onSubmit={handleSubmit} className="flex flex-col gap-1">
 				<Input
-					placeholder="Nouvelle tâche"
+					placeholder="New task"
 					value={title}
 					onChange={(e) => setTitle(e.target.value)}
 					disabled={mutation.isPending}
 					required
 				/>
 				<Button type="submit" disabled={mutation.isPending}>
-					{mutation.isPending ? "Création..." : "Ajouter"}
+					{mutation.isPending ? "Added..." : "Add"}
 				</Button>
 				{mutation.isError && (
 					<p className="text-red-400">{mutation.error.message}</p>

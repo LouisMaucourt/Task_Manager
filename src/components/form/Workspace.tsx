@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -32,13 +31,13 @@ export const CreateWorkspaceDialog = ({ open, onOpenChange }: Props) => {
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Créer un workspace</DialogTitle>
+					<DialogTitle>Create uan workspace</DialogTitle>
 				</DialogHeader>
 				<WorkspaceForm
 					onSubmit={(values) => mutation.mutate(values)}
 					isPending={mutation.isPending}
-					submitLabel="Créer"
-					pendingLabel="Création..."
+					submitLabel="Create"
+					pendingLabel="Creating..."
 					error={mutation.error?.message}
 					onCancel={() => onOpenChange(false)}
 				/>
@@ -46,4 +45,3 @@ export const CreateWorkspaceDialog = ({ open, onOpenChange }: Props) => {
 		</Dialog>
 	);
 };
-
