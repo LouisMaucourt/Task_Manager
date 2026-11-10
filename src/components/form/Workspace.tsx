@@ -7,7 +7,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { createWorkspace } from "@/modules/workspaces/api";
-import { WorkspaceForm } from "../Workspace";
+import { WorkspaceForm } from "@/pages/Workspace";
 
 type Props = {
 	open: boolean;

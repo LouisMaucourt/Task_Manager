@@ -16,8 +16,8 @@ import {
 } from "@/modules/workspaces_invitations/api";
 import type { CreateWorkspaceInvitationBody } from "@/modules/workspaces_invitations/model";
 import { getCookie } from "@/utilis/cookies";
-import { Email } from "./email/invitation";
-import { Button } from "./ui/button";
+import { Email } from "../components/email/invitation";
+import { Button } from "../components/ui/button";
 
 type InvitableRole = NonNullable<CreateWorkspaceInvitationBody["role"]>;
 

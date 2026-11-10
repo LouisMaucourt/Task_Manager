@@ -6,8 +6,8 @@ import { createBoardList, getBoardsList } from "@/modules/boardsList/api";
 import type { BoardList } from "@/modules/boardsList/model";
 import { getTasksByBoard } from "@/modules/tasks/api";
 import type { Task } from "@/modules/tasks/model";
-import { TaskItem } from "./items/TaskItem";
-import { Card } from "./ui/card";
+import { TaskItem } from "../components/items/TaskItem";
+import { Card } from "../components/ui/card";
 
 const initialData = {
 	name: "",

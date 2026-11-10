@@ -4,7 +4,7 @@ import { useLocation, useParams } from "react-router";
 import { createBoard, getBoards } from "@/modules/boards/api";
 import type { Board } from "@/modules/boards/model";
 import type { Project } from "@/modules/projects/model";
-import { BoardItem } from "./items/BoardItem";
+import { BoardItem } from "../components/items/BoardItem";
 
 export const Boards = () => {
 	const { state } = useLocation() as { state: { project?: Project } | null };

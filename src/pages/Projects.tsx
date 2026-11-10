@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { ProjectItem } from "@/components/items/ProjectItem";
+import { Card } from "@/components/ui/card";
 import { createProject, getProjects } from "@/modules/projects/api";
-import { ProjectItem } from "./items/ProjectItem";
-import { Card } from "./ui/card";
 
 const initialData = { name: "", description: "", key: "" };
 

@@ -2,11 +2,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import {
-	deleteWorkspace,
-	updateWorkspace,
-	type Workspace as WorkspaceType,
-} from "@/modules/workspaces/api";
+import { deleteWorkspace, updateWorkspace } from "@/modules/workspaces/api";
+import type { Workspace } from "@/modules/workspaces/model";
+import { WorkspaceForm } from "@/pages/Workspace";
 import { Button } from "../ui/button";
 import {
 	Dialog,
@@ -17,9 +15,8 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "../ui/dialog";
-import { WorkspaceForm } from "../Workspace";
 
-export const WorkspaceItem = ({ workspace }: { workspace: WorkspaceType }) => {
+export const WorkspaceItem = ({ workspace }: { workspace: Workspace }) => {
 	const queryClient = useQueryClient();
 	const [editOpen, setEditOpen] = useState(false);
 	const [deleteOpen, setDeleteOpen] = useState(false);

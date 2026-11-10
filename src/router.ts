@@ -1,15 +1,15 @@
 import { createBrowserRouter } from "react-router";
-import { Boards } from "./components/Boards";
-import { BoardsList } from "./components/BoardsList";
-import { Dashboard } from "./components/Dashboard";
-import { Home } from "./components/Home";
-import { Invitation } from "./components/Invitation";
 import { AuthLayout } from "./components/layout/AuthLayout";
 import { Root } from "./components/layout/Root";
-import { Members } from "./components/Members";
-import { Projects } from "./components/Projects";
-import { Test } from "./components/Test";
 import { Account } from "./pages/Account";
+import { Boards } from "./pages/Boards";
+import { BoardsList } from "./pages/BoardsList";
+import { Dashboard } from "./pages/Dashboard";
+import { Home } from "./pages/Home";
+import { Invitation } from "./pages/Invitation";
+import { Members } from "./pages/Members";
+import { Projects } from "./pages/Projects";
+import { Test } from "./pages/Test";
 
 export const router = createBrowserRouter([
 	{

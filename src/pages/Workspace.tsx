@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import type React from "react";
 import { useState } from "react";
+import { WorkspaceItem } from "@/components/items/WorkspaceItem";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { getWorkspaces } from "@/modules/workspaces/api";
-import { WorkspaceItem } from "./items/WorkspaceItem";
 
 export type WorkspaceFormValues = { name: string; description: string };
 
