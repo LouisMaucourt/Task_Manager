@@ -1,10 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useLocation, useParams } from "react-router";
+import { BoardItem } from "@/components/items/BoardItem";
 import { createBoard, getBoards } from "@/modules/boards/api";
-import type { Board } from "@/modules/boards/model";
 import type { Project } from "@/modules/projects/model";
-import { BoardItem } from "../components/items/BoardItem";
 
 export const Boards = () => {
 	const { state } = useLocation() as { state: { project?: Project } | null };

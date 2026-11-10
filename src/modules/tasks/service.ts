@@ -1,23 +1,22 @@
 import { pool } from "../../../backend/client";
 import type { CreateTaskBody, Task, UpdateTaskBody } from "./model";
 
-const COLUMNS = `t.id, t.title, COALESCE(t.description, '') AS description, t.position, t.priority, t.list_id AS "listId"`;
-const RETURNING = `id, title, COALESCE(description, '') AS description, position, priority, list_id AS "listId"`;
-
 export async function getTasksByBoard(boardId: string): Promise<Task[]> {
 	const result = await pool.query(
-		`SELECT ${COLUMNS}
+		`SELECT t.id, t.title, COALESCE(t.description, '') AS description,
+				t.position, t.priority, t.list_id AS "listId"
 		 FROM tasks t
 		 JOIN board_lists bl ON bl.id = t.list_id
 		 WHERE bl.board_id = $1
-		 ORDER BY t.position ASC`,
+		 ORDER BY t.position`,
 		[boardId],
 	);
+
 	return result.rows;
 }
 
 export async function createTask(
-	data: CreateTaskBody,
+	body: CreateTaskBody,
 	userId: string,
 ): Promise<Task> {
 	const result = await pool.query(
@@ -32,10 +31,13 @@ export async function createTask(
 		 FROM board_lists bl
 		 JOIN boards b ON b.id = bl.board_id
 		 WHERE bl.id = $1
-		 RETURNING ${RETURNING}`,
-		[data.listId, data.title, userId],
+		 RETURNING id, title, COALESCE(description, '') AS description,
+				   position, priority, list_id AS "listId"`,
+		[body.listId, body.title, userId],
 	);
+
 	if (!result.rows[0]) throw new Error("List not found");
+
 	return result.rows[0];
 }
 
@@ -43,30 +45,31 @@ export async function updateTask(
 	id: string,
 	body: UpdateTaskBody,
 ): Promise<Task | null> {
-	const res = await pool.query(
+	const result = await pool.query(
 		`UPDATE tasks
-		 SET title = COALESCE($2::varchar, title),
-			 description = COALESCE($3::text, description),
-			 priority = COALESCE($4::task_priority, priority),
+		 SET title = COALESCE($2, title),
+			 description = COALESCE($3, description),
+			 priority = COALESCE($4, priority),
 			 position = CASE
-				WHEN $5::double precision IS NOT NULL THEN $5::double precision
-				WHEN $6::uuid IS NOT NULL AND $6::uuid <> list_id THEN
-					(SELECT COALESCE(MAX(position), 0) + 1 FROM tasks WHERE list_id = $6::uuid)
+				WHEN $5 IS NOT NULL THEN $5
+				WHEN $6 IS NOT NULL AND $6 <> list_id THEN
+					(SELECT COALESCE(MAX(position), 0) + 1 FROM tasks WHERE list_id = $6)
 				ELSE position
 			 END,
-			 list_id = COALESCE($6::uuid, list_id),
+			 list_id = COALESCE($6, list_id),
 			 updated_at = now()
 		 WHERE id = $1
 		   AND (
-				$6::uuid IS NULL
+				$6 IS NULL
 				OR EXISTS (
 					SELECT 1
 					FROM board_lists bl
 					JOIN boards b ON b.id = bl.board_id
-					WHERE bl.id = $6::uuid AND b.project_id = tasks.project_id
+					WHERE bl.id = $6 AND b.project_id = tasks.project_id
 				)
 		   )
-		 RETURNING ${RETURNING}`,
+		 RETURNING id, title, COALESCE(description, '') AS description,
+				   position, priority, list_id AS "listId"`,
 		[
 			id,
 			body.title ?? null,
@@ -76,13 +79,18 @@ export async function updateTask(
 			body.listId ?? null,
 		],
 	);
-	return res.rows[0] ?? null;
+
+	return result.rows[0] ?? null;
 }
 
 export async function deleteTask(id: string): Promise<Task | null> {
-	const res = await pool.query(
-		`DELETE FROM tasks WHERE id = $1 RETURNING ${RETURNING}`,
+	const result = await pool.query(
+		`DELETE FROM tasks
+		 WHERE id = $1
+		 RETURNING id, title, COALESCE(description, '') AS description,
+				   position, priority, list_id AS "listId"`,
 		[id],
 	);
-	return res.rows[0] ?? null;
+
+	return result.rows[0] ?? null;
 }

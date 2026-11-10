@@ -76,7 +76,7 @@ export const Account = () => {
 
 	return (
 		<>
-			<Tabs defaultValue="signin" className="w-[800px]">
+			<Tabs defaultValue="signin" className="w-200">
 				<TabsList>
 					<TabsTrigger value="signin">Connexion</TabsTrigger>
 					<TabsTrigger value="signup">Inscription</TabsTrigger>

@@ -1,4 +1,4 @@
-import { Workspace, WorkspaceForm } from "./Workspace";
+import { Workspace } from "./Workspace";
 
 export const Dashboard = () => {
 	return (

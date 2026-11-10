@@ -1,4 +1,3 @@
-import type { CreateWorkspaceBody } from "../workspaces/model";
 import type { WorkspaceMembers } from "./model";
 
 export async function getWorkspacesMembers(

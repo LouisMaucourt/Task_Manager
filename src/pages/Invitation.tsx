@@ -50,8 +50,12 @@ export const Invitation = () => {
 			});
 			return acceptInvitation(token);
 		},
-		onSuccess: ({ workspace_id }) => {
-			document.cookie = `workspaceId=${workspace_id}; path=/`;
+		onSuccess: async ({ workspace_id }) => {
+			await window.cookieStore.set({
+				name: "workspaceId",
+				value: String(workspace_id),
+				path: "/",
+			});
 			window.location.href = "/dashboard";
 		},
 	});
