@@ -5,29 +5,50 @@ import type {
 	Workspace,
 } from "./model";
 
-export async function getWorkspaces(ownerId: string): Promise<Workspace[]> {
+export async function getWorkspaces(userId: string): Promise<Workspace[]> {
 	const result = await pool.query(
-		`SELECT id, name, COALESCE(description, '') AS description
-		 FROM workspaces
-		 WHERE owner_id = $1`,
-		[ownerId],
+		`SELECT w.id, w.name, COALESCE(w.description, '') AS description
+		 FROM workspaces w
+		 JOIN workspace_members wm ON wm.workspace_id = w.id
+		 WHERE wm.user_id = $1
+		 ORDER BY w.name`,
+		[userId],
 	);
 	return result.rows;
 }
-
 export async function createWorkspace(
 	body: CreateWorkspaceBody,
 	ownerId: string,
 ): Promise<Workspace> {
-	const slug = `${body.name}-${crypto.randomUUID()}`;
+	const client = await pool.connect();
 
-	const result = await pool.query(
-		`INSERT INTO workspaces (name, slug, description, owner_id)
-		 VALUES ($1, $2, $3, $4)
-		 RETURNING id, name, COALESCE(description, '') AS description`,
-		[body.name, slug, body.description, ownerId],
-	);
-	return result.rows[0];
+	try {
+		await client.query("BEGIN");
+		const slug = `${body.name}-${crypto.randomUUID()}`;
+		const result = await client.query(
+			`INSERT INTO workspaces (name, slug, description, owner_id)
+			 VALUES ($1, $2, $3, $4)
+			 RETURNING id, name, COALESCE(description, '') AS description`,
+			[body.name, slug, body.description, ownerId],
+		);
+
+		const workspace = result.rows[0];
+
+		await client.query(
+			`INSERT INTO workspace_members (workspace_id, user_id, role)
+			 VALUES ($1, $2, 'owner')`,
+			[workspace.id, ownerId],
+		);
+
+		await client.query("COMMIT");
+
+		return workspace;
+	} catch (error) {
+		await client.query("ROLLBACK");
+		throw error;
+	} finally {
+		client.release();
+	}
 }
 
 export async function updateWorkspace(

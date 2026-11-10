@@ -1,10 +1,10 @@
-import { WorkspaceForm } from "./Workspace";
+import { Workspace, WorkspaceForm } from "./Workspace";
 
 export const Dashboard = () => {
 	return (
 		<div>
 			Dashboard
-			{/* <WorkspaceForm /> */}
+			<Workspace />
 		</div>
 	);
 };

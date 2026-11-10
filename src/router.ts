@@ -10,6 +10,7 @@ import { Invitation } from "./pages/Invitation";
 import { Members } from "./pages/Members";
 import { Projects } from "./pages/Projects";
 import { Test } from "./pages/Test";
+import { Workspace } from "./pages/Workspace";
 
 export const router = createBrowserRouter([
 	{
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
 				Component: AuthLayout,
 				children: [
 					{ index: true, Component: Dashboard },
+					{ path: "workspace", Component: Workspace },
 					{ path: "projects", Component: Projects },
 					{
 						path: "projects/:id",
